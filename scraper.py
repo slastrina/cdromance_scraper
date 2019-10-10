@@ -1,12 +1,14 @@
-from multiprocessing.dummy import Pool as ThreadPool
-import sys
-import requests
 import os
+import sys
+from multiprocessing.dummy import Pool as ThreadPool
+
+import requests
 from bs4 import BeautifulSoup
 
-output_path = r'D:/Dropbox/Consoles/retail/Sony PSP/DLC'
+output_path = 'output'
 threads = 2  # site limits you after 2
 content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
+
 
 def get_file(res):
     """
@@ -15,7 +17,11 @@ def get_file(res):
     :param res: beautifulSoup tag object
     :return: None
     """
-    url = f'http://dl4.cdromance.com/download.php?file={res["data-filename"]}&id={res["data-id"]}&platform=page&key=2744046125430717546496'
+    url = f'http://dl4.cdromance.com/download.php' \
+          f'?file={res["data-filename"]}' \
+          f'&id={res["data-id"]}' \
+          f'&platform=page' \
+          f'&key=2744046125430717546496'
 
     r = requests.get(url, allow_redirects=True)
     print(f'{res["data-filename"]}, {len(r.content)} bytes')
@@ -23,6 +29,7 @@ def get_file(res):
 
     with open(f'{output_path}/{res["data-filename"]}', 'wb') as f:
         f.write(r.content)
+
 
 if not os.path.exists(output_path):
     os.mkdir(output_path)
