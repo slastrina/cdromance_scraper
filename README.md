@@ -1,9 +1,9 @@
-# cdromance_scraper
-cd_romance scraper
+# cdromance psp dlc scraper
+Simple scraper for cloning the contents of https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/ for gaming preservation purposes
 
 Requires python 3.7
 
-usage
+usage:
 
 pip install -r requirements.txt
 python scraper.py
