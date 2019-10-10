@@ -31,7 +31,7 @@ results = BeautifulSoup(request.content, 'html.parser').find_all('div', {'id': '
 
 print(f'Queued {len(results)} files for download')
 
-pool = ThreadPool(2)
+pool = ThreadPool(threads)
 
 print('Starting')
 results = pool.map(get_file, results)
