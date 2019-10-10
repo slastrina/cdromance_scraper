@@ -4,11 +4,17 @@ import requests
 import os
 from bs4 import BeautifulSoup
 
-output_path = 'output'
+output_path = r'D:/Dropbox/Consoles/retail/Sony PSP/DLC'
 threads = 2  # site limits you after 2
 content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
 
 def get_file(res):
+    """
+    Expects a beautifulSoup tag object with the attribute data-filename and data-id
+    Function will download and save the file passed to this function
+    :param res: beautifulSoup tag object
+    :return: None
+    """
     url = f'http://dl4.cdromance.com/download.php?file={res["data-filename"]}&id={res["data-id"]}&platform=page&key=2744046125430717546496'
 
     r = requests.get(url, allow_redirects=True)
