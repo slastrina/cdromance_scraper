@@ -17,18 +17,26 @@ def get_file(res):
     :param res: beautifulSoup tag object
     :return: None
     """
-    url = f'http://dl4.cdromance.com/download.php' \
-          f'?file={res["data-filename"]}' \
-          f'&id={res["data-id"]}' \
-          f'&platform=page' \
-          f'&key=2744046125430717546496'
+    if not os.path.exists(f'{output_path}/{res["data-filename"]}'):
+        try:
+            url = f'http://dl4.cdromance.com/download.php' \
+                  f'?file={res["data-filename"]}' \
+                  f'&id={res["data-id"]}' \
+                  f'&platform=page' \
+                  f'&key=2744046125430717546496'
 
-    r = requests.get(url, allow_redirects=True)
-    print(f'{res["data-filename"]}, {len(r.content)} bytes')
-    sys.stdout.flush()
+            r = requests.get(url, allow_redirects=True)
+            print(f'{res["data-filename"]}, {len(r.content)} bytes')
+            sys.stdout.flush()
 
-    with open(f'{output_path}/{res["data-filename"]}', 'wb') as f:
-        f.write(r.content)
+            with open(f'{output_path}/{res["data-filename"]}', 'wb') as f:
+                f.write(r.content)
+        except Exception as ex:
+            print(f'{res["data-filename"]} failed, Reason: {ex}')
+
+    else:
+        print(f'{res["data-filename"]} skipped, already exists')
+        sys.stdout.flush()
 
 
 if not os.path.exists(output_path):
