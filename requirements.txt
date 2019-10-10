@@ -1,7 +1,2 @@
 requests
 beautifulsoup4
-lxml
-Selenium
-Scrapy
-google-api-python-client
-vobject
