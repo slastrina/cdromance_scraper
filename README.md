@@ -3,10 +3,10 @@ Simple scraper for cloning the contents of https://cdromance.com/sony-psp-dlc-li
 
 Requires python 3.7
 
-### Setup:
-Clone Repo
-pip install -r requirements.txt
-Set key in scraper.py (see key retrieval)
+### Setup:  
+Clone Repo  
+pip install -r requirements.txt  
+Set key in scraper.py (see key retrieval)  
 
 ### Key Retrieval:
 To retrieve the key, Open chrome developer tool, Perform a download manually and look a the network tab
