@@ -5,7 +5,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 import requests
 from bs4 import BeautifulSoup
 
-output_path = 'output'
+output_path = 'D:/Dropbox/Consoles/retail/Sony PSP/DLC'
 threads = 2  # site limits you after 2
 content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
 
@@ -23,7 +23,7 @@ def get_file(res):
                   f'?file={res["data-filename"]}' \
                   f'&id={res["data-id"]}' \
                   f'&platform=page' \
-                  f'&key=2744046125430717546496'
+                  f'&key=3015679560829197352960'
 
             r = requests.get(url, allow_redirects=True)
             print(f'{res["data-filename"]}, {len(r.content)} bytes')
