@@ -10,9 +10,9 @@ output_path = 'output'
 content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
 
 # To retrieve the key, Open chrome developer tool, Perform a download manually and look a the network tab
-# find the link starting with download.php? i.e. http://dl4.cdromance.com/download.php?file=ULJS00385.7z&id=144240&platform=page&key=3015679560829197352960&test=4
+# find the link starting with download.php? i.e. http://dl4.cdromance.com/download.php?file=ULJS00385.7z&id=144240&platform=page&key=3558946431626157490176&test=4
 # Copy the numbers that appear after key= and before the next & symbol, enter that key below this line, failure to do so will result in errors
-key = '3015679560829197352960'  
+key = '3558946431626157490176'  
 
 def get_file(res):
     """
@@ -22,26 +22,35 @@ def get_file(res):
     :return: None
     """
     if not os.path.exists(f'{output_path}/{res["data-filename"]}'):
+        url = f'http://dl4.cdromance.com/download.php' \
+                          f'?file={res["data-filename"]}' \
+                          f'&id={res["data-id"]}' \
+                          f'&platform=page' \
+                          f'&key={key}'
+
         try:
-            url = f'http://dl4.cdromance.com/download.php' \
-                  f'?file={res["data-filename"]}' \
-                  f'&id={res["data-id"]}' \
-                  f'&platform=page' \
-                  f'&key={key}'
+            r = requests.get(url, allow_redirects=True, stream=True)
 
-            r = requests.get(url, allow_redirects=True)
-
-            if len(r.content) < 128:
-                print(f'{res["data-filename"]} failed, Reason: Key Expired')
+            if len(r.content) == 21:
+                print(f'{res["data-filename"]} failed, URL: {url}, Reason: File Doesnt Exist')
+                sys.stdout.flush()
+            elif len(r.content) == 89:
+                print(f'{res["data-filename"]} failed, URL: {url}, Reason: Key Expired')
+                sys.stdout.flush()
+            elif len(r.content) < 128:
+                print(f'{res["data-filename"]} failed, URL: {url}, Reason: {str(r.content)}')
                 sys.stdout.flush()
             else:
                 print(f'{res["data-filename"]}, {len(r.content)} bytes')
                 sys.stdout.flush()
 
                 with open(f'{output_path}/{res["data-filename"]}', 'wb') as f:
-                    f.write(r.content)
+                    for chunk in r.iter_content(chunk_size=1024): 
+                        if chunk:
+                            f.write(chunk)
+
         except Exception as ex:
-            print(f'{res["data-filename"]} failed, Reason: {ex}')
+            print(f'{res["data-filename"]} failed, URL: {url}, Reason: {str(ex)}')
 
     else:
         print(f'{res["data-filename"]} skipped, already exists')
