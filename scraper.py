@@ -13,7 +13,7 @@ content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/
 # To retrieve the key, Open chrome developer tool, Perform a download manually and look a the network tab
 # find the link starting with download.php? i.e. http://dl4.cdromance.com/download.php?file=ULJS00385.7z&id=144240&platform=page&key=3558946431626157490176&test=4
 # Copy the numbers that appear after key= and before the next & symbol, enter that key below this line, failure to do so will result in errors
-key = '3558946431626157490176'  
+key = '123456789098765434567'  
 
 counts = defaultdict(int)
 
