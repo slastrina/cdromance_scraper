@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 regex = r"'(.*?)'"
-threads = 1  # site limits you after 2
+threads = 2  # site limits you after 2
 output_path = 'output'
 content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
 
