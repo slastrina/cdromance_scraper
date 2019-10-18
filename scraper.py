@@ -2,18 +2,15 @@ import os
 import sys
 from multiprocessing.dummy import Pool as ThreadPool
 from collections import defaultdict
+import re
 
 import requests
 from bs4 import BeautifulSoup
 
-threads = 2  # site limits you after 2
+regex = r"'(.*?)'"
+threads = 1  # site limits you after 2
 output_path = 'output'
 content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
-
-# To retrieve the key, Open chrome developer tool, Perform a download manually and look a the network tab
-# find the link starting with download.php? i.e. http://dl4.cdromance.com/download.php?file=ULJS00385.7z&id=144240&platform=page&key=3558946431626157490176&test=4
-# Copy the numbers that appear after key= and before the next & symbol, enter that key below this line, failure to do so will result in errors
-key = '3558946431626157490176'  
 
 counts = defaultdict(int)
 
@@ -25,39 +22,40 @@ def get_file(res):
     :return: None
     """
     if not os.path.exists(f'{output_path}/{res["data-filename"]}'):
-        url = f'http://dl4.cdromance.com/download.php' \
-                          f'?file={res["data-filename"]}' \
-                          f'&id={res["data-id"]}' \
-                          f'&platform=page' \
-                          f'&key={key}'
+        url = f'https://cdromance.com/wp-content/plugins/cdromance/public/dlc-page/direct.php'
+        r = requests.post(url, data = {"file_name": res["data-filename"], "post_id": res["data-id"], "server_id": res["data-server"]}, allow_redirects=True, stream=True)
 
-        try:
-            r = requests.get(url, allow_redirects=True, stream=True)
+        if b'window.location' in r.content:
+            reg_data = re.search(regex, str(r.content))
+            download_url = reg_data.group(1)
 
-            if len(r.content) == 21:
-                counts['error_file_not_found'] += 1
-                print(f'{res["data-filename"]} failed, URL: {url}, Reason: File Doesnt Exist')
-                sys.stdout.flush()
-            elif len(r.content) == 89:
-                counts['error_key_expired'] += 1
-                print(f'{res["data-filename"]} failed, URL: {url}, Reason: Key Expired')
-                sys.stdout.flush()
-            elif len(r.content) < 128:
-                counts['error_other'] += 1
-                print(f'{res["data-filename"]} failed, URL: {url}, Reason: {str(r.content)}')
-                sys.stdout.flush()
-            else:
-                counts['success'] += 1
-                print(f'{res["data-filename"]}, {len(r.content)} bytes')
-                sys.stdout.flush()
+            try:
+                r = requests.get(download_url, allow_redirects=True, stream=True)
 
-                with open(f'{output_path}/{res["data-filename"]}', 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=1024): 
-                        if chunk:
-                            f.write(chunk)
+                if len(r.content) == 21:
+                    counts['error_file_not_found'] += 1
+                    print(f'{res["data-filename"]} failed, URL: {download_url}, Reason: File Doesnt Exist')
+                    sys.stdout.flush()
+                elif len(r.content) == 89:
+                    counts['error_key_expired'] += 1
+                    print(f'{res["data-filename"]} failed, URL: {download_url}, Reason: Key Expired')
+                    sys.stdout.flush()
+                elif len(r.content) < 128:
+                    counts['error_other'] += 1
+                    print(f'{res["data-filename"]} failed, URL: {download_url}, Reason: {str(r.content)}')
+                    sys.stdout.flush()
+                else:
+                    counts['success'] += 1
+                    print(f'{res["data-filename"]}, {len(r.content)} bytes')
+                    sys.stdout.flush()
 
-        except Exception as ex:
-            print(f'{res["data-filename"]} failed, URL: {url}, Reason: {str(ex)}')
+                    with open(f'{output_path}/{res["data-filename"]}', 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=1024):
+                            if chunk:
+                                f.write(chunk)
+
+            except Exception as ex:
+                print(f'{res["data-filename"]} failed, URL: {download_url}, Reason: {str(ex)}')
 
     else:
         counts['skipped'] += 1
