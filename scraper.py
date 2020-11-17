@@ -3,14 +3,19 @@ import sys
 from multiprocessing.dummy import Pool as ThreadPool
 from collections import defaultdict
 import re
+import cfscrape
 
 import requests
 from bs4 import BeautifulSoup
 
+scraper = cfscrape.create_scraper()
+
+
 regex = r"'(.*?)'"
+regex_key = r".+key=(.+)'.+"
 threads = 2  # site limits you after 2
 output_path = 'output'
-content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/'
+content_url = 'https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content'
 
 counts = defaultdict(int)
 
@@ -22,15 +27,39 @@ def get_file(res):
     :return: None
     """
     if not os.path.exists(f'{output_path}/{res["data-filename"]}'):
-        url = f'https://cdromance.com/wp-content/plugins/cdromance/public/dlc-page/direct.php'
-        r = requests.post(url, data = {"file_name": res["data-filename"], "post_id": res["data-id"], "server_id": res["data-server"]}, allow_redirects=True, stream=True)
+        key_url = f'https://cdromance.com/wp-content/plugins/cdromance/public/direct.php'
+        download_url = f'https://dl5.cdromance.com/download.php'
+
+        headers = {
+            "Host": "cdromance.com",
+            "Connection": "keep-alive",
+            "X-Requested-With": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.52 Safari/536.5",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "*/*",
+        }
+
+        r_key = scraper.post(key_url, headers= headers, data = {
+            "file_name": res["data-filename"],
+            #"post_id": res["data-id"], # post_id required but stops us getting a key back to feed into the download_url
+            "server_id": res["data-server"]
+        }, allow_redirects=True, stream=True)
+
+        key = re.search(regex_key, str(r_key.text)).group(1)
+        print(key)
+
+        print({"file_name": res["data-filename"], "post_id": res["data-id"], "server_id": res["data-server"]})
+
+        r = scraper.post(download_url, params = {"file": res["data-filename"], "id": res["data-id"], "platform": "psp", "key": key}, allow_redirects=True, stream=True)
+
+        print(r.content)
 
         if b'window.location' in r.content:
             reg_data = re.search(regex, str(r.content))
             download_url = reg_data.group(1)
 
             try:
-                r = requests.get(download_url, allow_redirects=True, stream=True)
+                r = scraper.get(download_url, allow_redirects=True, stream=True)
 
                 if len(r.content) == 21:
                     counts['error_file_not_found'] += 1
@@ -67,11 +96,13 @@ if not os.path.exists(output_path):
     os.mkdir(output_path)
 
 print(f'Scraping: {content_url}')
-request = requests.get(content_url)
+
+request = scraper.get(content_url)
 
 print(request.status_code)
 
 if request.status_code == 404:
+    print("Site Unreachable (404)")
     exit(1)
 
 results = BeautifulSoup(request.content, 'html.parser').find_all('div', {'id': 'acf-content-wrapper'})
