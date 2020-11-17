@@ -4,6 +4,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from collections import defaultdict
 import re
 import cfscrape
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,7 +29,6 @@ def get_file(res):
     """
     if not os.path.exists(f'{output_path}/{res["data-filename"]}'):
         key_url = f'https://cdromance.com/wp-content/plugins/cdromance/public/direct.php'
-        download_url = f'https://dl5.cdromance.com/download.php'
 
         headers = {
             "Host": "cdromance.com",
@@ -39,24 +39,25 @@ def get_file(res):
             "Accept": "*/*",
         }
 
-        r_key = scraper.post(key_url, headers= headers, data = {
+        r = scraper.post(key_url, headers= headers, data = {
             "file_name": res["data-filename"],
-            #"post_id": res["data-id"], # post_id required but stops us getting a key back to feed into the download_url
+            "post_id": res["data-id"], # post_id required but stops us getting a key back to feed into the download_url
             "server_id": res["data-server"]
         }, allow_redirects=True, stream=True)
 
-        key = re.search(regex_key, str(r_key.text)).group(1)
-        print(key)
-
-        print({"file_name": res["data-filename"], "post_id": res["data-id"], "server_id": res["data-server"]})
-
-        r = scraper.post(download_url, params = {"file": res["data-filename"], "id": res["data-id"], "platform": "psp", "key": key}, allow_redirects=True, stream=True)
-
-        print(r.content)
+        # key = re.search(regex_key, str(r_key.text)).group(1)
+        # print(key)
+        #
+        # print({"file_name": res["data-filename"], "post_id": res["data-id"], "server_id": res["data-server"]})
+        #
+        # r = scraper.post(download_url, params = {"file": res["data-filename"], "id": res["data-id"], "platform": "psp", "key": key}, allow_redirects=True, stream=True)
+        #
+        #print(r.content)
 
         if b'window.location' in r.content:
             reg_data = re.search(regex, str(r.content))
-            download_url = reg_data.group(1)
+            download_url = reg_data.group(1)+f"&platform=psp&id={res['data-id']}"
+            #print(download_url)
 
             try:
                 r = scraper.get(download_url, allow_redirects=True, stream=True)
