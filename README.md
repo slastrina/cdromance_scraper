@@ -1,3 +1,5 @@
+### NOTE: scraper not currently working, the host has changed the download api implementation
+
 # cdromance psp dlc scraper
 Simple scraper for cloning the contents of https://cdromance.com/sony-psp-dlc-list-psp-downloadable-content/ for gaming preservation purposes
 
